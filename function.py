@@ -1,4 +1,4 @@
-
+import sqlite3
 import os 
 import datetime
 import shutil
@@ -44,7 +44,7 @@ def sha256(filename):
         print(sha256_hash.hexdigest())
     return sha256_hash.hexdigest()
 
-def scan_file():#應該要用threading來叫\
+def scan_file():#由 api 定時呼叫
     json_information=dict()
     for i in path_to_scan:
         if os.path.isdir(i):
@@ -52,23 +52,72 @@ def scan_file():#應該要用threading來叫\
                 for f in files:
                     fullpath= os.path.abspath(os.path.join(root,f))
                     file_hash=sha256(fullpath)
-                    #db_check_ifsame(path.name,i,file_hash,json_information) #add a dict message(where is not same)
+                    #db_check_ifsame(path.name,fullpath,file_hash,json_information) #add a dict message(where is not same)
         else:
             file_hash=sha256(i)
             path=pathlib.Path(i)
-            #db_check_ifsame(path.name,i,file_hash,json_information) #add a dict message(where is not same)
+            #db_check_ifsame(path.name,fullpath,file_hash,json_information) #add a dict message(where is not same)
      #return json.dump(json_information)
 
 def recover(keep,path,version=-1): #new to cover old or keep record & path is absolute path & version=-1 -1 is the latest version
     if(keep==True):
         control_copy_file(True,path)
     else:
-        #cover=db_find(path,version) return sha256,absolute_path  of 檔案 in the directory in a dict mode(afterall,push cover version to the latest)
-        ''' #這邊可以直接db的function 處理
-        for i in cover:
-            path_object = pathlib.Path(i)
-            shutil.copy(f'./copyfile/{i}{path_object.suffix}',cover[i])
-        '''
+        if os.path.isdir(path):
+            for root,dirs,files in os.walk(path):
+                for f in files:
+                    fullpath= os.path.abspath(os.path.join(root,f))
+                    #cover=db_find(fullpath,version) return sha256 of 檔案 in the directory in a list mode(afterall,push cover version to the latest)
+                    extension = os.path.splitext(f)[1]
+                    shutil(f'./copyfile/{cover}{extension}',fullpath)
+        else:
+            #cover=db_find(path,version)
+            extension = os.path.splitext(path)[1]
+            shutil(f'./copyfile/{cover}{extension}',path)
+                    
+def setdatabase(): #設定DB
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        c.execute('''CREATE TABLE DATAS.
+                (VERSION INT PRIMARY KEY NOT NULL
+                SHA256 INT NOT NULL
+                FILENAME TEXT NOT NULL
+                POSITION TEXT NOT NULL
+                TIME TEXT NOT NULL
+                );''')
+
+def push_database(filename,position,sha256,time): 
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        temp=findnewest(position)+1
+        c.execute(f"INSERT INTO DATAS(SHA256,FILENAME,POSITION,VERSION)\
+        VALUES({sha256},{filename},{position},{temp},{time}")
+
+def findnewest(position):
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        cursor = conn.execute(f"SELECT Max(VERSION) from DATAS WHERE POSITION={position}")
+        return cursor[0]
+
+def db_delete_file(position):
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        c.execute(f"DELETE from DATAS WHERE POSITION LIKE {position}+'%'")
+
+def db_check_ifsame(filename,position,sha256,json_information):
+        conn = sqlite3.connect('database.db')
+        c = conn.cursor()
+        cursor = c.execute(f"SELECT SHA256, TIME from DATAS WHERE FILENAME={filename} AND POSITION={position}")
+        if(sha256==cursor[0]):
+            json_information= {"mode":"true","time":cursor[1]}
+        else:
+            json_information= {"mode":"false","time":cursor[1]}
+            extension = os.path.splitext(position)[1]
+            fullpath= os.path.abspath(os.path.join('./copyfile',f'{sha256}{extension}'))
+            with open(fullpath,"r") as old,open(position,"r") as new:
+                for i in old,new:
+                    if(old[i] != new[i]):
+                        json_information[f'line:{i}'].append(f'{old[i]} different from  {new[i]}')
 
 #def db_delete_version(參數):
 
