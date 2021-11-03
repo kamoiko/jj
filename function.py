@@ -22,17 +22,18 @@ def control_copy_file(if_create,file_location):
                     to_be_copy.append(fullpath)
         else:
             to_be_copy.append(file_location)
-        
         for x in to_be_copy:
             path=pathlib.Path(x)
             hash_name=sha256(x)
-            #push_database(path.name,x,hash_name,cur) #(file_name,absolute_path,sha256,time)
+            push_database(path.name,x,hash_name,cur) #(file_name,absolute_path,sha256,time)
             shutil.copy(x,f'./copyfile/{hash_name}{path.suffix}')
             print(f'tracing.....{x}')
     else:
-        #db_delete_file(file_location) #包含資料夾和檔案(需要區分)
+        db_delete_file(file_location) #包含資料夾和檔案(需要區分)
         path_to_scan.remove(file_location)
         print('cancel tracing....file_location')
+    print(f'current controling {path_to_scan}')
+    print('\n')
 
 def sha256(filename):
     sha256_hash = hashlib.sha256()
@@ -52,11 +53,11 @@ def scan_file():#由 api 定時呼叫
                 for f in files:
                     fullpath= os.path.abspath(os.path.join(root,f))
                     file_hash=sha256(fullpath)
-                    #db_check_ifsame(path.name,fullpath,file_hash,json_information) #add a dict message(where is not same)
+                    db_check_ifsame(path.name,fullpath,file_hash,json_information) #add a dict message(where is not same)
         else:
             file_hash=sha256(i)
             path=pathlib.Path(i)
-            #db_check_ifsame(path.name,fullpath,file_hash,json_information) #add a dict message(where is not same)
+            db_check_ifsame(path.name,fullpath,file_hash,json_information) #add a dict message(where is not same)
      #return json.dump(json_information)
 
 def recover(keep,path,version=-1): #new to cover old or keep record & path is absolute path & version=-1 -1 is the latest version
@@ -78,27 +79,31 @@ def recover(keep,path,version=-1): #new to cover old or keep record & path is ab
 def setdatabase(): #設定DB
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        c.execute('''CREATE TABLE DATAS.
-                (VERSION INT PRIMARY KEY NOT NULL
-                SHA256 INT NOT NULL
-                FILENAME TEXT NOT NULL
-                POSITION TEXT NOT NULL
+        c.execute('''CREATE TABLE DATAS
+                (VERSION INT NOT NULL,
+                SHA256 INT NOT NULL,
+                FILENAME TEXT NOT NULL,
+                POSITION TEXT NOT NULL,
                 TIME TEXT NOT NULL
                 );''')
 
 def push_database(filename,position,sha256,time): 
         conn = sqlite3.connect('database.db')
-        c = conn.cursor()
         temp=findnewest(position)+1
-        c.execute(f"INSERT INTO DATAS(SHA256,FILENAME,POSITION,VERSION)\
-        VALUES({sha256},{filename},{position},{temp},{time}")
+        conn.execute("INSERT INTO DATAS(SHA256,FILENAME,POSITION,VERSION,TIME)\
+        VALUES(?,?,?,?,?)",[sha256,filename,position,temp,time])
+        conn.commit()
+        
+
 
 def findnewest(position):
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        cursor = conn.execute(f"SELECT Max(VERSION) from DATAS WHERE POSITION={position}")
-        return cursor[0]
-
+        cursor = c.execute("SELECT Max(VERSION) from DATAS WHERE POSITION= ?",[position])
+        for i in cursor:
+            return i[0]
+            
+'''#以下DB function 有問題
 def db_delete_file(position):
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -124,4 +129,5 @@ def db_check_ifsame(filename,position,sha256,json_information):
 #def db_show_allversion():
 
   
+'''
 
