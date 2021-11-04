@@ -124,14 +124,20 @@ def db_check_ifsame(filename,position,sha256,json_information):
                 for i in old,new:
                     if(old[i] != new[i]):
                         json_information[f'line:{i}'].append(f'{old[i]} different from  {new[i]}')
-'''#以下DB function 有問題
+#以下DB function 有問題
 def db_delete_version(version,position):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     c.execute(f"DELETE from DATAS WHERE POSITION=? AND VERSION=?",[position,version])
     c.execute(f"UPDATE DATAS VERSION=? WHERE POSITION=? AND VERSION>?"[VERSION-1,position,version])     #不確定
-#def db_show_allversion():
-
+def db_show_allversion(position):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    cursor = c.execute(f"SELECT SHA256, VERSION from DATAS WHERE=?",[position])
+    >>> allversion=np.array([])
+    for i in cursur
+        >>>temp = np.array([(i[0],i[1])])
+        allversion=>>>np.vstack((allversion,temp))     #numpy可以這樣嗎
   
 '''
 
