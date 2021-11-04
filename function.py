@@ -107,16 +107,17 @@ def findnewest(position):
 def db_delete_file(position):
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        c.execute(f"DELETE from DATAS WHERE POSITION LIKE {position}+'%'")
+        c.execute(f"DELETE from DATAS WHERE POSITION LIKE ?",[position+'%'])
 
 def db_check_ifsame(filename,position,sha256,json_information):
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
-        cursor = c.execute(f"SELECT SHA256, TIME from DATAS WHERE FILENAME={filename} AND POSITION={position}")
-        if(sha256==cursor[0]):
-            json_information= {"mode":"true","time":cursor[1]}
+        cursor = c.execute(f"SELECT SHA256, TIME from DATAS WHERE FILENAME=? AND POSITION=?",[filename,position])
+        for i in cursur
+            if(sha256==i[0]):
+                json_information= {"mode":"true","time":i[1]}
         else:
-            json_information= {"mode":"false","time":cursor[1]}
+            json_information= {"mode":"false","time":i[1]}
             extension = os.path.splitext(position)[1]
             fullpath= os.path.abspath(os.path.join('./copyfile',f'{sha256}{extension}'))
             with open(fullpath,"r") as old,open(position,"r") as new:
@@ -124,8 +125,11 @@ def db_check_ifsame(filename,position,sha256,json_information):
                     if(old[i] != new[i]):
                         json_information[f'line:{i}'].append(f'{old[i]} different from  {new[i]}')
 
-#def db_delete_version(參數):
-
+def db_delete_version(version,position):
+    conn = sqlite3.connect('database.db')
+    c = conn.cursor()
+    c.execute(f"DELETE from DATAS WHERE POSITION=? AND VERSION=?",[position,version])
+    c.execute(f"UPDATE DATAS VERSION=? WHERE POSITION=? AND VERSION>?"[VERSION-1,position,version])     #不確定
 #def db_show_allversion():
 
   
