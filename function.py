@@ -103,7 +103,7 @@ def findnewest(position):
         for i in cursor:
             return i[0]
             
-'''#以下DB function 有問題
+#以下DB function 有問題(已改)
 def db_delete_file(position):
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -124,7 +124,7 @@ def db_check_ifsame(filename,position,sha256,json_information):
                 for i in old,new:
                     if(old[i] != new[i]):
                         json_information[f'line:{i}'].append(f'{old[i]} different from  {new[i]}')
-
+'''#以下DB function 有問題
 def db_delete_version(version,position):
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
