@@ -5,7 +5,6 @@ import shutil
 import pathlib
 import hashlib
 import json
-from types import NoneType
 import numpy as np
 import difflib
 path_to_scan=set()
@@ -169,10 +168,11 @@ def db_show_allversion(position):  #problem
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     cursor = c.execute(f"SELECT SHA256, VERSION from DATAS WHERE POSITION=?",[position])
-    allversion=np.array([])
+    allversion=[]
     for i in cursor:
-        temp = np.array([(i[0],i[1])])
-        allversion=np.vstack((allversion,temp))     #numpy可以這樣嗎
+        temp =[i[0],i[1]]
+        allversion=allversion+temp
+             #numpy可以這樣嗎
     print(allversion)
   
 def db_find(fullpath,version=-1): #done
