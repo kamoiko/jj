@@ -70,13 +70,13 @@ def recover(keep,path,version=-1): #new to cover old or keep record & path is ab
             for root,dirs,files in os.walk(path):
                 for f in files:
                     fullpath= os.path.abspath(os.path.join(root,f))
-                    cover=db_find(fullpath,version) #return sha256 of 檔案 in the directory in a list mode(afterall,push cover version to the latest)
+                    cover=db_find(fullpath,version) 
                     extension = os.path.splitext(f)[1]
-                    shutil(f'./copyfile/{cover}{extension}',fullpath)
+                    shutil.copy(f'./copyfile/{cover}{extension}',fullpath)
         else:
             cover=db_find(path,version)
             extension = os.path.splitext(path)[1]
-            shutil(f'./copyfile/{cover}{extension}',path)
+            shutil.copy(f'./copyfile/{cover}{extension}',path)
                     
 def setdatabase(): #設定DB #done
         conn = sqlite3.connect('database.db')
@@ -167,13 +167,15 @@ def db_delete_version(position,version):   #done
 def db_show_allversion(position):  #problem
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
-    cursor = c.execute(f"SELECT SHA256, VERSION from DATAS WHERE POSITION=?",[position])
+    json_information=dict()
+    cursor = c.execute("SELECT VERSION,FILENAME,TIME from DATAS WHERE POSITION=?",[position])
     allversion=[]
     for i in cursor:
-        temp =[i[0],i[1]]
+        filename=i[1]
+        temp =[[i[0],i[2]]]
         allversion=allversion+temp
-             #numpy可以這樣嗎
-    print(allversion)
+    json_information[filename]=allversion
+    return json.dumps(json_information,ensure_ascii=False).encode('utf-8').decode()
   
 def db_find(fullpath,version=-1): #done
     conn = sqlite3.connect('database.db')
