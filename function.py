@@ -10,6 +10,8 @@ import difflib
 path_to_scan=set()
 #幫我用r-string 過濾 file_location 的跳脫字元
 #file_location 參數為絕對位置 (可以為目錄或檔案)
+
+#傳入(bool,位置)true為創建檔案false為刪除
 def control_copy_file(if_create,file_location): #done
     if(if_create == True):
         path_to_scan.add(file_location)#增加追蹤的目錄或檔案位置
@@ -36,7 +38,8 @@ def control_copy_file(if_create,file_location): #done
         print('cancel tracing....file_location')
     print(f'current controling {path_to_scan}')
     print('\n')
-
+#傳入檔名
+#回傳hash
 def sha256(filename):#done
     sha256_hash = hashlib.sha256()
     with open(filename,"rb") as f:
@@ -88,7 +91,7 @@ def setdatabase(): #設定DB #done
                 POSITION TEXT NOT NULL,
                 TIME TEXT NOT NULL
                 );''')
-
+#傳入(檔名,位置,hash,時間)將此資料在db中建立
 def push_database(filename,position,sha256,time): #done
         conn = sqlite3.connect('database.db')
         temp=findnewest(position)+1
@@ -97,7 +100,7 @@ def push_database(filename,position,sha256,time): #done
         conn.commit()
         
 
-
+#找到最新的檔案版本數
 def findnewest(position): #done
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -106,7 +109,9 @@ def findnewest(position): #done
             if(i[0]==None):
                 return 0
             return i[0]
-            
+
+#傳入位置
+# 刪除在db中此位置下的所有檔案            
 def db_delete_file(position): #done
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
@@ -144,6 +149,8 @@ def db_check_ifsame(filename,position,sha256): #done but need to fix file size p
                 json_information['wrong_information']= wrong_information
         return json_information
 
+#傳入(位置,版本)
+#刪除此位置的該版本
 def db_delete_version(position,version):   #done
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
@@ -161,10 +168,12 @@ def db_delete_version(position,version):   #done
             c.execute("DELETE from DATAS WHERE POSITION=? AND VERSION=?",[place,version])
         except:
             pass
-    c.execute("UPDATE DATAS SET VERSION=VERSION-1 WHERE POSITION LIKE ?",[position+'%'])     #不確定    
+    c.execute("UPDATE DATAS SET VERSION=VERSION-1 WHERE POSITION LIKE ?",[position+'%'])       
     conn.commit()
 
-def db_show_allversion(position):  #problem
+#傳入位置
+#回傳所有該位置所有版本的版本,檔名,時間
+def db_show_allversion(position):  
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     json_information=dict()
@@ -176,7 +185,9 @@ def db_show_allversion(position):  #problem
         allversion=allversion+temp
     json_information[filename]=allversion
     return json.dumps(json_information,ensure_ascii=False).encode('utf-8').decode()
-  
+
+#傳入(位置,版本)
+#回傳hash
 def db_find(fullpath,version=-1): #done
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
