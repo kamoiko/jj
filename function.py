@@ -1,5 +1,7 @@
+#加上新註解
 #幫我用r-string 過濾 傳入 file_location 時的跳脫字元
 #傳位置的參數都是絕對路徑 例如file_location
+#有bug 我忘了考慮隱藏檔案 之後會改一點點
 import sqlite3
 import os 
 import datetime
@@ -8,11 +10,11 @@ import pathlib
 import hashlib
 import json
 import difflib
-path_to_scan=set()
+path_to_scan=set()# 正在追蹤的目錄或檔案位置
 
 #設定DATABASE
 #沒有回傳
-def setdatabase(): #設定DB #done
+def setdatabase(): #設定DB 
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
         c.execute('''CREATE TABLE DATAS
@@ -87,7 +89,7 @@ def recover(keep,path,version=-1): #new to cover old or keep record & path is ab
 
 #傳入(位置,版本) 跟 db_delete_file 很像 但可以選定版本
 #刪除此位置的該版本
-def db_delete_version(position,version):   #done
+def db_delete_version(position,version):   
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     try:
@@ -126,7 +128,7 @@ def db_show_allversion(position):
 #############################################################################
 #傳入(位置,版本) 找到該位置和版本的sha256 (#如果沒有傳入version 則預設為最新版本)
 #回傳sha256
-def db_find(fullpath,version=-1): #done
+def db_find(fullpath,version=-1): 
     conn = sqlite3.connect('database.db')
     c = conn.cursor()
     if(version==-1): 
@@ -140,7 +142,7 @@ def db_find(fullpath,version=-1): #done
 
 #傳入檔名
 #回傳hash value
-def sha256(filename):#done
+def sha256(filename):
     sha256_hash = hashlib.sha256()
     with open(filename,"rb") as f:
         # Read and update hash string value in blocks of 4K
@@ -152,7 +154,7 @@ def sha256(filename):#done
 
 #傳入(檔名,位置,hash,時間)將此資料在db中建立
 #沒有回傳
-def push_database(filename,position,sha256,time): #done
+def push_database(filename,position,sha256,time):
         conn = sqlite3.connect('database.db')
         temp=findnewest(position)+1
         conn.execute("INSERT INTO DATAS(SHA256,FILENAME,POSITION,VERSION,TIME)\
@@ -161,7 +163,7 @@ def push_database(filename,position,sha256,time): #done
 
 #傳入(絕對位置(僅限檔案沒有目錄))找到最新的檔案版本數
 #回傳(INT)最新檔案的版本
-def findnewest(position): #done
+def findnewest(position): 
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
         cursor = c.execute("SELECT Max(VERSION) from DATAS WHERE POSITION= ?",[position])
@@ -197,7 +199,7 @@ def db_check_ifsame(filename,position,sha256):
 
 #傳入絕對路徑(可以為目錄或檔案)刪除在db中此位置下的所有檔案 同時也刪除備份檔案(包括所有版本紀錄)
 # 沒有回傳            
-def db_delete_file(position): #done
+def db_delete_file(position): 
         conn = sqlite3.connect('database.db')
         c = conn.cursor()
         cursor=c.execute("Select SHA256,FILENAME from DATAS WHERE POSITION LIKE ? ",[position+'%'])
